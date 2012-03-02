@@ -14,6 +14,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 
+import com.github.nagaseyasuhito.rhodanthe.context.AppendantClassContext;
+import com.github.nagaseyasuhito.rhodanthe.context.ClassContext;
+import com.github.nagaseyasuhito.rhodanthe.context.SpecifyClassContext;
 import com.google.common.collect.ImmutableMap;
 
 import freemarker.template.Configuration;
@@ -48,11 +51,12 @@ public class RhodantheAnnotationProcessor extends AbstractProcessor {
     }
 
     protected void processAnnotation(TypeElement element) throws IOException {
-        this.write(new RhodantheContext(element, "servlet", "Listener"), "Listener");
-        this.write(new RhodantheContext(element, "servlet", "Filter"), "Filter");
+        this.write(new AppendantClassContext(element, null, "Filter"), "Filter");
+        this.write(new AppendantClassContext(element, null, "WebApplication"), "WebApplication");
+        this.write(new SpecifyClassContext(element, "page", "IndexPage"), "IndexPage");
     }
 
-    protected CharSequence processTemplate(CharSequence templateName, RhodantheContext context) throws IOException {
+    protected CharSequence processTemplate(CharSequence templateName, ClassContext context) throws IOException {
         Template template = this.configuration.getTemplate(templateName + ".java");
         StringWriter writer = new StringWriter();
 
@@ -65,10 +69,10 @@ public class RhodantheAnnotationProcessor extends AbstractProcessor {
         return writer.getBuffer();
     }
 
-    protected void write(RhodantheContext context, CharSequence template) throws IOException {
+    protected void write(ClassContext context, CharSequence template) throws IOException {
         CharSequence source = this.processTemplate(template, context);
 
-        JavaFileObject javaFileObject = this.processingEnv.getFiler().createSourceFile(context.getDecolatedFullyQualifiedClassName());
+        JavaFileObject javaFileObject = this.processingEnv.getFiler().createSourceFile(context.getFullyQualifiedClassName());
         Writer javaWriter = javaFileObject.openWriter();
         javaWriter.write(source.toString());
         javaWriter.close();
